@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ceres: Bleakness</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    #texto {
+      font-size: 24px;
+      margin-bottom: 40px;
+      white-space: pre-wrap;
+    }
+    #instruccion {
+      font-size: 16px;
+      color: gray;
+    }
+  </style>
+</head>
+<body style="background-color: black; color: white; font-family: sans-serif; text-align: center; padding-top: 100px;">
+    <div id="texto" style="font-size: 24px; max-width: 600px; margin: 0 auto;"></div>
+    <div id="indicacion" style="margin-top: 20px; font-size: 18px; display: none;">Presiona Enter para continuar</div>
+
+
+<div id="texto"></div>
+<div id="instruccion">Presiona Enter para continuar</div>
+<audio id="audio"></audio>
+
+<script>
+    const dialogos = [
+        { texto: "......", audio: "./song/1.mp3" },
+        { texto: "...Hmmmmm......", audio: "./song/P1-1.m4a" },
+        { texto: "eh ... ¡¿Eh?!", audio: "./song/P1-2.m4a" },
+        { texto: "¿¡Donde estoy!? ¿¡Que le paso a la fragata!?", audio: "./song/P1-3.m4a" },
+
+        { texto: "Iniciando sistemas de emergencia del Caza RX-208", audio: "./song/IA-1.mp4" ,color: "#0cb1f3"},
+       
+        { texto: "¿Hola? ¿qu-quien eres? y ¿Donde estamos?", audio: "./song/P1-4.m4a" },
+       
+        { texto: "Soy la IA YULI a cargo de los sistemas del Caza RX-208", audio: "./song/IA-2.mp4" ,color: "#0cb1f3"},
+        { texto: "Los sistemas de energía están en estado crítico ", audio: "./song/IA-3.mp4" ,color: "#0cb1f3"},
+        { texto: "Desactivare los sistemas no fundamentales para la nave", audio: "./song/IA-4.mp4" ,color: "#0cb1f3"},
+        { texto: "Incluyendo los sistemas de auto apuntado y la asistencia de manejo e IA", audio: "./song/IA-5.mp4" ,color: "#0cb1f3"},
+       
+        { texto: "Espera Espera ESPERA, no se como tripular esta nave, soy un asistente técnico en la Astarion, Yo no ...", audio: "./song/P1-5.m4a" },
+        
+        { texto: "Lluvia de Asteroides aproximándose, Recomiendo acciones evasivas", audio: "./song/IA-6.mp4" ,color: "#0cb1f3"},
+       
+        { texto: "¿¡Que!? No no espera, ¿Como hago funcionar esta nave?", audio: "./song/P1-6.m4a" },
+       
+        { texto: "Encuentre en su tablera de mandos las teclas WASD, esos son los mandos de la nave y le permitirán avanzar, retroceder y rotar su trayectoria", audio: "./song/IA-7.mp4" ,color: "#0cb1f3"},
+       
+        { texto: "Ok ok, ¿Qué más?", audio: "./song/P1-7.m4a" },
+        
+        { texto: "Encontrara un botón en forma de misil en su tablero, tambien tiene la forma de una flecha apuntando hacia arriba en ciertos modelos, con ese boton dispara los misiles ioni-ion-ion", audio: "./song/IA-8.mp4" ,color: "#0cb1f3"},
+        
+        { texto: "Hola? ¿Qué te pasa?", audio: "./song/P1-8.m4a" },
+       
+        { texto: "Sistemas Falla-falla ~ ando - Sistema electr~ Apagando Sis-sis~", audio: "./song/IA-9.mp4" ,color: "#0cb1f3"},
+       
+        { texto: "No NO no, Espera ¿Qué es lo que tengo que hacer?", audio: "./song/P1-9.m4a" },
+       
+        { texto: "Apagando Sis-Sist Apoyo de IA-I-I", audio: "./song/IA-10.mp4" ,color: "#0cb1f3"},
+        { texto: "...", audio: "./song/1.mp3" ,color: "#0cb1f3"},
+        { texto: "Debes Sobrevivir", audio: "./song/IA-11.mp4",color: "#0cb1f3" },
+       
+        { texto: "Compañia Astral inc. - Apagando sistemas no fundamentales", audio: "./song/3.mp3" }
+    ];
+
+    let indiceDialogo = 0;
+    let escribiendo = false;
+    let fondoIniciado = false;
+
+    const contenedorTexto = document.getElementById("texto");
+    const indicacion = document.getElementById("indicacion");
+
+    // Audio de fondo en bucle
+    const fondoAudio = new Audio("./song/MusicaAmbientesD1.mp3");
+    fondoAudio.loop = true;
+    fondoAudio.volume = 0.5;
+
+    async function reproducirDialogoActual() {
+    if (escribiendo || indiceDialogo >= dialogos.length) return;
+
+    escribiendo = true;
+    contenedorTexto.textContent = "";
+    indicacion.style.display = "none";
+
+    const { texto, audio, color } = dialogos[indiceDialogo];
+    contenedorTexto.style.color = color || "white"; // Usa blanco si no se especifica
+
+    const audioDialogo = new Audio(audio);
+    audioDialogo.play().catch(e => console.warn("Error al reproducir audio del diálogo:", e));
+
+    for (let i = 0; i < texto.length; i++) {
+        contenedorTexto.textContent += texto[i];
+        await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    escribiendo = false;
+    indicacion.style.display = "block";
+}
+
+    document.addEventListener("keydown", async (e) => {
+        if (e.key === "Enter") {
+            if (!fondoIniciado) {
+                fondoAudio.play().catch(e => console.warn("Error al iniciar música de fondo:", e));
+                fondoIniciado = true;
+            }
+
+            if (!escribiendo && indiceDialogo < dialogos.length) {
+                await reproducirDialogoActual();
+                indiceDialogo++;
+            }
+
+            if (indiceDialogo === dialogos.length && !escribiendo) {
+                // Espera un momento antes de redirigir
+                setTimeout(() => {
+                    window.location.href = "Prototipo N6.html";
+                }, 1000);
+            }
+        }
+    });
+
+    // Reproduce el primer diálogo automáticamente si deseas
+    reproducirDialogoActual();
+</script>
+
+</body>
+</html>
