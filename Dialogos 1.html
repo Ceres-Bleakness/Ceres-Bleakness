@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ceres: Bleakness - Despertar en la obscuridad</title>
+  <link rel="icon" type="image/png" href="./images/favicon.png"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+
+    body {
+      background-image: url('./images/descarga.jpg'); /* Reemplaza con tu imagen */
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: black;
+      opacity: 1;
+      transition: opacity 1s;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #dialogo, #indicacion {
+      position: relative;
+      z-index: 2;
+    }
+
+    #dialogo {
+      font-size: 24px;
+      max-width: 80%;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 10px;
+      margin: auto;
+      margin-top: 30vh;
+    }
+
+    #indicacion {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      opacity: 0.7;
+      display: block;
+    }
+
+    .Omitir { 
+        background-color: black;
+       
+        
+        width:200px;
+        height:100px ;
+        color:whitesmoke;
+        font-size: 30px;
+     }
+
+     #BotonOmitir{
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      margin-top: 400px ;
+      margin-left: 650px ;
+      opacity: 1;
+      transition: opacity 1s;
+      z-index: 1;
+
+     }
+
+  </style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div id="dialogo"></div>
+<div id="indicacion">Presiona Enter para continuar...</div>
+<div id="BotonOmitir"><button class="Omitir" onclick="location.href='Nivel1.html'">Omitir</button></div>
+ 
+
+<audio id="audioFondo" src="./song/MusicaAmbientesD1.mp3" loop></audio>
+
+<script>
+  const dialogos = [
+    { texto: "...", audio: "./song/.m4a"},
+        { texto: "......", audio: "./song/1.mp3" },
+        { texto: "...Hmmmmm......", audio: "./song/Despierta.m4a" },
+        { texto: "¿Dónde… dónde estoy? ¡Esto no es Astarion! ¿Qué demonios…?", audio: "./song/P1-1.wav" },
+
+        { texto: "Unidad RX-208 activada. Bienvenido, operador. Estado físico: alerta. Estado emocional: alteración crítica.", audio: "./song/BFR1-1.wav" ,color: "#0cb1f3",quitarOscuridad: true},
+       
+        { texto: "¿Quién eres? ¿Por qué no recuerdo nada?¿Qué hacemos aquí? ¿Dónde está la estación? ¿Dónde está el resto?", audio: "./song/P1-2.wav" },
+       
+        { texto: "Soy BFR, la inteligencia artificial encargada de operar el caza RX-208.", audio: "./song/BFR1-2.wav" ,color: "#0cb1f3"},
+        { texto: "Datos de la estación Astarion: inaccesibles. Diagnóstico del operador: Memoria fragmentada. Razón: desconocida.", audio: "./song/BFR1-3.wav" ,color: "#0cb1f3"},
+        { texto: "Informe prioritario: múltiples impactos detectados. Integridad del casco comprometida. ", audio: "./song/BFR1-4.wav" ,color: "#0cb1f3"},
+        { texto: "Propulsión secundaria operativa. Debe abandonar la zona inmediatamente.", audio: "./song/BFR1-5.wav" ,color: "#0cb1f3"},
+       
+        { texto: "No… no recuerdo nada. ¿Qué pasó? ¿Por qué estoy sola?", audio: "./song/P1-3.wav" },
+        
+        { texto: "No hay tiempo. Trayectoria de colisión con campo de asteroides en 87 segundos. ", audio: "./song/BFR1-6.m4a" ,color: "#0cb1f3"},
+        { texto: "Iniciando protocolo de supervivencia.Siga mis instrucciones al pie de la letra.", audio: "./song/BFR1-7.m4a" ,color: "#0cb1f3"},
+        { texto: "Encuentre en su tablero de mandos las teclas WASD, esos son los mandos de la nave y le permitirán avanzar, retroceder y rotar su trayectoria", audio: "./song/BFR1-8.wav" ,color: "#0cb1f3"},
+       
+        { texto: "O-Ok, la nave se mueve, ¿Qué más?", audio: "./song/P1-4.wav" },
+        
+        { texto: "Encontrará un botón en forma de misil en su tablero, tambien tiene la forma de una flecha apuntando hacia arriba en ciertos modelos, con ese boton dispara los misiles ioni-ion-ion", audio: "./song/BFR1-9.wav" ,color: "#0cb1f3"},
+        
+        { texto: "BFR? ¿Qué te pasa?", audio: "./song/P1-5.mp4" },
+       
+        { texto: "Estabilizadores… 60%... sistema de soporte… código de reinicio… RX-pro…zzk…", audio: "./song/BFR1-10.wav" ,color: "#0cb1f3"},
+       
+        { texto: "¡¿YULI?! ¿Qué tienes? ¿Por favor háblame? No me dejes sola…", audio: "./song/P1-6.mp4" },
+       
+        { texto: "Lo siento, piloto… Fije protocolo PRX-1… Debes Sobrevivir", audio: "./song/BFR1-11.wav" ,color: "#0cb1f3"},
+       
+        { texto: "Compañia Astral inc. - Apagando sistemas no fundamentales", audio: "./song/3.mp3" }
+    ];
+
+  let indiceDialogo = 0;
+  let escribiendo = false;
+  let fondoIniciado = false;
+  let audioDialogoActual = null; // <<-- Aquí se guarda el audio activo
+
+  const contenedorTexto = document.getElementById("dialogo");
+  const indicacion = document.getElementById("indicacion");
+  const overlay = document.getElementById("overlay");
+  const fondoAudio = document.getElementById("audioFondo");
+
+  async function reproducirDialogoActual() {
+    if (escribiendo || indiceDialogo >= dialogos.length) return;
+
+    // Detiene el audio anterior si existe
+    if (audioDialogoActual) {
+      audioDialogoActual.pause();
+      audioDialogoActual.currentTime = 0;
+    }
+
+    escribiendo = true;
+    contenedorTexto.innerHTML = "";
+    indicacion.style.display = "none";
+
+    const { texto, audio, quitarOscuridad, color } = dialogos[indiceDialogo];
+    contenedorTexto.style.color = color || "white";
+
+    if (quitarOscuridad) {
+      overlay.style.opacity = "0";
+    }
+
+    // Reproduce el nuevo audio
+    audioDialogoActual = new Audio(audio);
+    audioDialogoActual.play().catch(e => console.warn("Audio bloqueado por el navegador:", e));
+
+    for (let i = 0; i <= texto.length; i++) {
+      contenedorTexto.innerHTML = texto.slice(0, i);
+      await new Promise(resolve => setTimeout(resolve, 40));
+    }
+
+    escribiendo = false;
+    indicacion.style.display = "block";
+  }
+
+  document.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter" && !escribiendo) {
+      if (!fondoIniciado) {
+        fondoAudio.play().catch(e => console.warn("Fondo bloqueado por el navegador:", e));
+        fondoIniciado = true;
+        fondoAudio.volume = 0.2;
+      }
+
+      indiceDialogo++;
+      if (indiceDialogo < dialogos.length) {
+        await reproducirDialogoActual();
+      } else {
+        // Detener también cualquier audio en reproducción antes de salir
+        if (audioDialogoActual) {
+          audioDialogoActual.pause();
+          audioDialogoActual.currentTime = 0;
+        }
+        window.location.href = "Nivel1.html";
+      }
+    }
+  });
+
+  document.body.addEventListener("click", () => {
+    if (indiceDialogo === 0) {
+      fondoAudio.play().catch(() => {});
+      fondoIniciado = true;
+      reproducirDialogoActual();
+    }
+  }, { once: true });
+</script>
+
+
+</body>
+</html>

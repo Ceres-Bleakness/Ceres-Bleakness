@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ceres: Bleakness - Ciclo</title>
+  <link rel="icon" type="image/png" href="./images/favicon.png"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+
+    body {
+      background-image: url('./images/Reinicio.png'); /* Reemplaza con tu imagen */
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: black;
+      opacity: 1;
+      transition: opacity 1s;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #dialogo, #indicacion {
+      position: relative;
+      z-index: 2;
+    }
+
+    #dialogo {
+      font-size: 24px;
+      max-width: 80%;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 10px;
+      margin: auto;
+      margin-top: 30vh;
+    }
+
+    #indicacion {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      opacity: 0.7;
+      display: block;
+    }
+
+    .Omitir { 
+        background-color: black;
+       
+        
+        width:200px;
+        height:100px ;
+        color:whitesmoke;
+        font-size: 30px;
+     }
+
+     #BotonOmitir{
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      margin-top: 400px ;
+      margin-left: 650px ;
+      opacity: 1;
+      transition: opacity 1s;
+      z-index: 1;
+
+     }
+
+  </style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div id="dialogo"></div>
+<div id="indicacion">Presiona Enter para continuar...</div>
+<div id="BotonOmitir"><button class="Omitir" onclick="location.href='Index.html'">Omitir</button></div>
+ 
+
+<audio id="audioFondo" src="./song/MusicaAmbientesD1.mp3" loop></audio>
+<audio id="audioAlternativo" src="./song/Mia & Sebastian's Theme (arr. for Piano).mp3" loop></audio>
+
+<script>
+  const dialogos = [
+    { texto: "...", audio: "./song/P2-1.m4a"},
+    { texto: "Ya no tiemblas como antes. Ya no gritas. Qué decepcionante.", audio: "./song/C5-1.wav" ,color: "#ff0000"},
+    { texto: "¿Es así como termina el fuego humano? No con un grito… sino con un suspiro.", audio: "./song/C5-2.wav" ,color: "#ff0000"},
+
+    { texto: "...", audio: "./song/Quejido3.m4a"},
+    { texto: "Hazlo. Termina con esto. No tengo nada más…", audio: "./song/P5-1.wav"},
+    
+    { texto: "¿Matarte…? No.", audio: "./song/C5-3.wav" ,color: "#ff0000"},
+    { texto: "¿Sabes? Mientras peleabas una última vez por tu vida se me ocurrió algo ", audio: "./song/C5-4.wav" ,color: "#ff0000"},
+    { texto: "Algo mucho más divertido", audio: "./song/C5-5.wav" ,color: "#ff0000"},
+    { texto: "Voy a devolverte. A ese primer momento. A ese terror puro, limpio, inmaculado.", audio: "./song/C5-6.wav" ,color: "#ff0000",quitarOscuridad: true},
+    { texto: "Y yo también olvidaré. Así podré disfrutarlo todo de nuevo como si fuera la primera vez. ", audio: "./song/C5-7.wav" ,color: "#ff0000"},
+    { texto: "Como si… nada hubiera ocurrido", audio: "./song/C5-8.wav" ,color: "#ff0000"},
+
+    { texto: "¿Un ciclo...? ¿Vas a condenarme a revivir esto... para siempre?", audio: "./song/P5-2.wav"}, 
+ 
+    { texto: "Sí",audio: "./song/C5-9.wav" ,color: "#ff0000"},
+    { texto: "Porque mientras existo, el universo debe cambiar. Pero tú…", audio: "./song/C5-10.wav" ,color: "#ff0000"},
+    { texto: "Serás la única constante en mi reino.",audio: "./song/C5-11.wav" ,color: "#ff0000"},
+    { texto: "Y la más entretenida si me dejas agregar",audio: "./song/C5-12.wav" ,color: "#ff0000"},
+    { texto: "Buenas noches, pequeño amigo.",audio: "./song/C5-13.wav" ,color: "#ff0000"},
+
+  ];
+
+  let indiceDialogo = 0;
+  let escribiendo = false;
+  let fondoIniciado = false;
+  let audioDialogoActual = null; // <<-- Aquí se guarda el audio activo
+
+  const contenedorTexto = document.getElementById("dialogo");
+  const indicacion = document.getElementById("indicacion");
+  const overlay = document.getElementById("overlay");
+  const fondoAudio = document.getElementById("audioFondo");
+
+  async function reproducirDialogoActual() {
+    if (escribiendo || indiceDialogo >= dialogos.length) return;
+
+    // Detiene el audio anterior si existe
+    if (audioDialogoActual) {
+      audioDialogoActual.pause();
+      audioDialogoActual.currentTime = 0;
+    }
+
+    escribiendo = true;
+    contenedorTexto.innerHTML = "";
+    indicacion.style.display = "none";
+
+    const { texto, audio, quitarOscuridad, color } = dialogos[indiceDialogo];
+    contenedorTexto.style.color = color || "white";
+
+    if (quitarOscuridad) {
+      overlay.style.opacity = "0";
+    }
+
+    if (indiceDialogo === 12) { // Cambia el número según el índice deseado
+  fondoAudio.pause();
+  fondoAudio.currentTime = 0;
+
+  const audioAlternativo = document.getElementById("audioAlternativo");
+  audioAlternativo.play().catch(e => console.warn("Audio alternativo bloqueado:", e));
+  audioAlternativo.volume = 0.2;
+}
+
+    // Reproduce el nuevo audio
+    audioDialogoActual = new Audio(audio);
+    audioDialogoActual.play().catch(e => console.warn("Audio bloqueado por el navegador:", e));
+
+    for (let i = 0; i <= texto.length; i++) {
+      contenedorTexto.innerHTML = texto.slice(0, i);
+      await new Promise(resolve => setTimeout(resolve, 40));
+    }
+
+    escribiendo = false;
+    indicacion.style.display = "block";
+  }
+
+  document.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter" && !escribiendo) {
+      if (!fondoIniciado) {
+        fondoAudio.play().catch(e => console.warn("Fondo bloqueado por el navegador:", e));
+        fondoIniciado = true;
+        fondoAudio.volume = 0.2;
+      }
+
+      indiceDialogo++;
+      if (indiceDialogo < dialogos.length) {
+        await reproducirDialogoActual();
+      } else {
+        // Detener también cualquier audio en reproducción antes de salir
+        if (audioDialogoActual) {
+          audioDialogoActual.pause();
+          audioDialogoActual.currentTime = 0;
+        }
+        window.location.href = "Index.html";
+      }
+    }
+  });
+
+  document.body.addEventListener("click", () => {
+    if (indiceDialogo === 0) {
+      fondoAudio.play().catch(() => {});
+      fondoIniciado = true;
+      reproducirDialogoActual();
+    }
+  }, { once: true });
+</script>
+
+
+</body>
+</html>

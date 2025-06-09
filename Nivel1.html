@@ -1,0 +1,851 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+<meta charset="UTF-8" /> 
+     <title>Ceres: Bleakness - Nivel 1</title>
+     <link rel="icon" type="image/png" href="./images/favicon.png"/>
+      <link rel="stylesheet" type="text/css" href="styles.css"/>
+      <style>
+        #interfaz{
+
+    font-family: 'Konkhmer SleoKchher', cursive;
+    background-color:black;
+    color:white;
+    font-size:26px;
+    position:fixed;
+    top: 0;
+    left:0;
+    z-index: 1;
+    width:100% ;    
+    height: 50px;
+    background-color: transparent;    
+    margin-top:1%;
+    margin-left:1%; 
+    
+    /* otros estilos para la barra de navegacióm */
+        }
+
+
+
+    #aviso{
+
+        font-size: 100px;
+        margin: auto;
+        padding: auto;
+        color: red;
+    }    
+        
+     </style>
+</head>
+<body>
+<canvas id="myCanvas">
+    <!--El elemento HTML canvas se puede utilizar para dibujar gráficos a través de 
+        secuencias de comandos (por lo general JavaScript ).-->
+</canvas>
+
+<div id="interfaz">
+    <div id="miDivdis">Puntos: 50/<span id="puntos" style="opacity: 1;" str></span></div>
+    <div id="miDivalt">Salud: <span id="salud" style="opacity: 1;"></span></div>
+
+    <div id="miDiv" style=" width: 50%; margin:auto;">
+        <span id="aviso"></span> <br>
+
+       <button disabled id="botonReiniciar"
+        style="width: 50px; height: 200px;
+        background-color:black;
+        color: white;
+        border: none;
+        font-size: 30px;
+        font-family: 'Konkhmer SleoKchher', cursive;
+        margin: auto;
+        opacity: 0;
+        " onclick=" location.reload()">Reiniciar
+    </button>
+    </div>
+
+</div>
+
+
+<script type="importmap"> 
+    {
+        "imports":{
+            "three": "./js/three.module.js",
+            "three/OrbitControls": "./js/OrbitControls.js" 
+        }
+}
+</script>
+<script type="module"> 
+    //👉🏽 Mandar llamar a la librería
+    import{RoundedBoxGeometry} from"./js/RoundedBoxGeometry.js";
+    import * as THREE from 'three'; 
+    import * as CANNON from 'https://cdn.jsdelivr.net/npm/cannon-es@latest/dist/cannon-es.js';
+  import CannonDebugger from './js/cannon-es-debugger.js'
+    import {OrbitControls} from 'three/OrbitControls';
+    import XWING from"./js/Xwing.js";
+    import Nave1 from"./js/Nave1.js";
+    import Nave2 from"./js/tief.js";
+    import Est1 from"./js/Estacion1.js";
+    import Ast1 from"./js/Asteroide1.js";
+    import Ast2 from"./js/Asteroide2.js";
+    import Ast3 from"./js/Asteroide3.js";
+   
+    console.log(OrbitControls);
+
+    //👉🏽 Renderer - Realiza una conexión entre el código y el canvas
+    var renderer = new THREE.WebGLRenderer({canvas: document.getElementById('myCanvas'),antialias: true});
+    renderer.setPixelRatio(window.decivePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0xaf7ac5);
+
+    const world = new CANNON.World();
+    world.broadphase = new CANNON.SAPBroadphase(world);
+    var scene = new THREE.Scene();
+    let GavedadDinamica=0;
+
+    const groundMaterial = new CANNON.Material("groundMaterial");
+    const wheelMaterial = new CANNON.Material("wheelMaterial");
+const wheelGroundMaterial = new CANNON.ContactMaterial(wheelMaterial, groundMaterial,{
+friction: 0.3,
+restitution: 0,
+contactEquationStiffness: 1000,
+});
+    //world.gravity.set(0, GavedadDinamica, 0); // Gravedad usando cannon
+//world.defaultContactMaterial.friction=0; //-> friccion entre objetos
+
+world.gravity.set(0, -9.82, 0); // Gravedad usando cannon
+
+const cannonDebug = new CannonDebugger(scene, world); ///////// se genera un debugger que permite "ver" las aristas de las geometrias usadas en el cannon (un helper)
+
+const groundBody = new CANNON.Body({
+type: CANNON.Body.STATIC,
+shape: new CANNON.Plane(),
+});
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);/// elplano aparece vertical, asíq ue hay que girarlo para que quede acostado
+groundBody.position.y=-10;
+world.addBody(groundBody);//////////////////////////////////////// configuración del mundo cannon
+
+//
+
+    //🎬 Creando nueva escena 
+    
+
+    //🎥 Agregar una cámara de perspectiva
+    var camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 5000);
+    scene.add(camera);
+
+    //Evento redimensionar canvas
+    //Size: Objeto donde se toman los ta,años 'inner' de la ventana
+    const sizes = {
+width: window.innerWidth,
+height: window.innerHeight,
+};
+
+
+    //Tomando el canvasmediante el id 'myCnavas'
+    const canvas = document.getElementById('myCanvas');
+    //Evento que se ejecutara al redimensionar
+    window.addEventListener('resize', () => {
+
+        //Actualizando los valores del objeto 'size'
+        sizes.width = window.innerWidth;
+sizes.height = window.innerHeight;
+
+        //Actualizado los valores en la cámara como la relacion aspecto
+        camera.aspect = sizes.width / sizes.height;
+        camera.updateProjectionMatrix();
+
+        //Aplicando al render el nuevo tamaño del 'viewport'
+        renderer.setSize(sizes.width, sizes.height);
+});
+
+
+    //👉🏽Settings de la cámara
+    camera.position.set(0,200,0);
+    camera.rotation.set(-1.57, 0, 0);
+
+   
+   /* //👉🏽Añadiendo los OrbitControls
+    var controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;*/
+
+  
+
+    // 🪄🪄 SECCIÓN DE CÓDIGO 🪄🪄
+
+    //ENTREGA DE PROYECTO
+    //Entrega de naves
+    //Avance de escenario (elementos decorativos-recomendable trabajar por bloques)
+    
+
+    /*
+    Elaborado por:
+    Guindic Gorostieta Zury Josue
+    Villa Mora Aneliz
+    Villegas Vidal Angel
+    Villagran Cortes Miguel Angel
+    */
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Limite del mundo
+const GRUPO_GENERAL = 1;
+const GRUPO_DISPARO = 2;
+const GRUPO_PAREDES = 4;
+let anchoVentana = window.innerWidth;
+let altoVentana = window.innerHeight;
+
+const ParedBodyD = new CANNON.Body({
+type: CANNON.Body.STATIC,
+shape: new CANNON.Box(new CANNON.Vec3(1,700,500))
+});
+ParedBodyD.quaternion.setFromEuler(0,0, 0);
+ParedBodyD.position.x=300;
+
+// AÑADIR ESTO:
+ParedBodyD.collisionFilterGroup = GRUPO_PAREDES;
+ParedBodyD.collisionFilterMask = GRUPO_GENERAL;
+
+world.addBody(ParedBodyD);
+
+const ParedBodyA = new CANNON.Body({
+type: CANNON.Body.STATIC,
+shape: new CANNON.Box(new CANNON.Vec3(700,700,1))
+});
+ParedBodyA.quaternion.setFromEuler(0,0, 0);
+ParedBodyA.position.z=150;
+// AÑADIR ESTO:
+ParedBodyA.collisionFilterGroup = GRUPO_PAREDES;
+ParedBodyA.collisionFilterMask = GRUPO_GENERAL;
+world.addBody(ParedBodyA);
+
+const ParedBodyAb = new CANNON.Body({
+type: CANNON.Body.STATIC,
+shape: new CANNON.Box(new CANNON.Vec3(700,700,1))
+});
+ParedBodyAb.quaternion.setFromEuler(0,0, 0);
+ParedBodyAb.position.z=-150;
+// AÑADIR ESTO:
+ParedBodyAb.collisionFilterGroup = GRUPO_PAREDES;
+ParedBodyAb.collisionFilterMask = GRUPO_GENERAL;
+world.addBody(ParedBodyAb);
+
+const ParedBodyI = new CANNON.Body({
+type: CANNON.Body.STATIC,
+shape: new CANNON.Box(new CANNON.Vec3(1,700,700))
+});
+ParedBodyI.quaternion.setFromEuler(0,0,0);
+ParedBodyI.position.x=-300;
+
+//AÑADIR ESTO
+ParedBodyI.collisionFilterGroup = GRUPO_PAREDES;
+ParedBodyI.collisionFilterMask = GRUPO_GENERAL;
+world.addBody(ParedBodyI);
+
+
+///Techo
+
+const ParedBodyTecho = new CANNON.Body({
+type: CANNON.Body.STATIC,
+shape: new CANNON.Box(new CANNON.Vec3(1400,50,1400))
+});
+ParedBodyAb.quaternion.setFromEuler(0,0, 0);
+ParedBodyAb.position.y=10;
+// AÑADIR ESTO:
+ParedBodyAb.collisionFilterGroup = GRUPO_PAREDES;
+ParedBodyAb.collisionFilterMask = GRUPO_GENERAL;
+world.addBody(ParedBodyAb);
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+//Sonido
+const listener = new THREE.AudioListener();
+      camera.add( listener );
+
+      //Funcion cancion de fondo
+
+      const fondoAudio = new Audio('./song/DreamorReality.mp3');
+      function MusicaFondo(){
+        fondoAudio.loop = true;
+fondoAudio.volume = 0.5;
+fondoAudio.play();
+
+      }
+
+//Background
+    
+var loader = new THREE.TextureLoader();
+    var bgTexture = loader.load("./images/Espacio1.jpg");
+    scene.background = bgTexture;
+
+    //Luz y sombras
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFShadowMap;
+
+
+var light2 = new THREE.DirectionalLight(0xffffff,0.5);
+light2.position.set(0,20,40);
+light2.target.position.set(0,0,0);//cuando hay sombra
+
+light2.castShadow = true;
+light2.shadow.bias=0.01;
+light2.shadow.mapSize.width = 1024;
+light2.shadow.mapSize.height = 1024;
+
+light2.shadow.camera.top=25;
+light2.shadow.camera.bottom=-25;
+light2.shadow.camera.left=-50;
+light2.shadow.camera.right=50;
+light2.shadow.camera.visible = true;
+
+scene.add(light2);
+
+
+//Funcion luces
+
+var light1 = new THREE.PointLight( 0x06affe, 1, 100 );
+light1.position.set( -15, 10, 0 );
+scene.add( light1 );
+
+var light2 = new THREE.PointLight( 0xfe0a06, 1, 50 );
+light2.position.set( 15, 10, 0 );
+scene.add( light2 );
+
+var clock = new THREE.Clock();
+var vf= 4;
+
+function lf(){
+light1.intensity=(Math.cos(clock.getElapsedTime()*vf)*.5)+.5;
+light2.intensity=(Math.cos(clock.getElapsedTime()*vf)*-.5)+.5;
+
+}
+
+
+
+//Importar nave2
+/*
+var Esc4 = Nave2({x:0,y:0,z:0});
+scene.add(Esc4);
+Esc4.position.set(30,5,3);
+Esc4.rotation.set(0,-1.37,0);*/
+
+
+//Importar nave1
+/*
+var Esc1 = Nave1({x:0,y:0,z:0});
+scene.add(Esc1);
+Esc1.position.set(0,5,3);
+Esc1.rotation.set(0,-1.37,0);*/
+
+
+   //Importar nave
+   var Esc3 = XWING({x:0,y:0,z:0});
+//scene.add(Esc3);
+Esc3.position.set(0,0,0);
+    //aGRUPAR NAVE
+    var Xwing = new THREE.Group();
+    Xwing.add(Esc3,light2,light1);
+    scene.add(Xwing);
+    Xwing.position.set(-200,5,0);
+
+    //Importar asteroide1
+var Esc5 = Ast1({x:0,y:0,z:0});
+//scene.add(Esc5);
+Esc5.position.set(280,0,50);
+Esc5.scale.set(2,2,2);
+
+//Importar asteroide2
+var Esc6 = Ast2({x:0,y:0,z:0});
+//scene.add(Esc6);
+Esc6.position.set(280,10,0);
+
+//Importar asteroide3
+
+var Esc7 = Ast3({x:0,y:0,z:0});
+//scene.add(Esc7);
+Esc7.position.set(-280,-10,-50);
+
+//misil
+var geometry = new THREE.BoxGeometry(3, 3, 8);
+    var material = new THREE.MeshBasicMaterial({color: 0xFF0000} );
+   var missile = new THREE.Mesh(geometry,material);
+   missile.rotation.set(0,1.57,0)
+    missile.castShadow = true;
+    missile.receiveShadow = true;
+
+
+
+    //Fisica XWING
+    const GrupoBody = new CANNON.Body({ 
+mass: 1, //afectada por la fisica: 1, estatico: 0
+material:groundMaterial,
+position:new CANNON.Vec3(-30,5,3),
+shape: new CANNON.Box(new CANNON.Vec3(14,5,8))
+});
+GrupoBody.position.copy(Xwing.position);
+world.addBody(GrupoBody); ///////////////// cuerpo "fisico" de la caja
+
+
+    //Fisica Meteoro5
+    const MeteoroBody = new CANNON.Body({ 
+mass: 1, //afectada por la fisica: 1, estatico: 0
+material:groundMaterial,
+position:new CANNON.Vec3(-30,5,3),
+shape: new CANNON.Sphere(20)
+});
+//MeteoroBody.position.copy(Esc5.position);
+world.addBody(MeteoroBody); ///////////////// cuerpo "fisico" de la caja
+
+//Fisica Meteoro7
+const MeteoroBody2 = new CANNON.Body({ 
+mass: 1, //afectada por la fisica: 1, estatico: 0
+material:groundMaterial,
+position:new CANNON.Vec3(-30,5,3),
+shape: new CANNON.Sphere(10)
+});
+//MeteoroBody.position.copy(Esc5.position);
+world.addBody(MeteoroBody2); ///////////////// cuerpo "fisico" de la caja
+
+
+
+//Importar estacion 
+var Esc2 = Est1({x:0,y:0,z:0});
+scene.add(Esc2);
+Esc2.position.set(-100,-80,-50);
+Esc2.rotation.set(-1.3,0,0);
+Esc2.scale.set(8,8,8);
+
+
+
+
+
+
+
+//movimiento
+const moveSpeed =150;
+const rotationSpeed = 5;
+const keys ={};
+//let lastTime= performance.now();
+const acceleration = 5;
+const deceleration = 0.95; // Freno cuando no se presionan teclas
+let currentSpeed = 0;
+
+function aplicaFisicaAGrafico() {
+    MeteoroBody.position.copy(Esc5.position);
+    MeteoroBody2.position.copy(Esc7.position);
+
+    if (DisparoBody) {
+        DisparoBody.position.copy(missile.position);
+    }
+
+    Xwing.position.copy(GrupoBody.position);
+    Xwing.quaternion.copy(GrupoBody.quaternion);
+}
+//////////////////////////////////////////////////////aplicamos las propiedades fisicas a las geometrias 
+/////////////////////////////////////////////////////////////////////////Los cuaterniones en física representan
+// rotaciones en el espacio, véase cuaterniones y rotación en el espacio. Además tienen aplicaciones en el electromagnetismo y la mecánica cuántica. 
+//se utilizan a menudo en gráficos por computadora (y en el análisis geométrico asociado) para representar 
+// la orientación de un objeto en un espacio tridimensional. Las ventajas son: conforman una representación 
+// no singular (comparada con, por ejemplo, los ángulos de Euler), más compacta y más rápida que las matrices, 
+// en términos computacionales. Debido a lo expuesto, es común el uso de esta notación en el campo de la robótica, 
+// debido a que permite en ciertas situaciones, mediante cuaterniones unitarios, abstraer rotaciones y traslaciones 
+// con cierta simplicidad, permitiendo la obtención de la orientación relativa entre sistemas de coordenadas.
+
+
+
+window.addEventListener('keydown', (event) => {
+    keys [event.code]=true;
+});
+
+window.addEventListener('keyup', (event) => {
+    keys [event.code]=false;
+});
+
+function animate(){
+//requestAnimationFrame(animate);
+
+const forward = new THREE.Vector3(0, 0, -1); // Dirección hacia adelante en el espacio local
+
+  // Obtener la dirección hacia adelante del objeto usando su orientación (quaternion)
+  Xwing.getWorldDirection(forward); // Obtén la dirección global
+  forward.normalize();
+  /*
+const now = performance.now();
+const deltaTime = (now - lastTime)/5;
+lastTime = now;*/
+
+ // Asegúrate de aplicar la dirección según la rotación de gr1
+  if (keys['KeyW']) {
+    currentSpeed = Math.min(currentSpeed + acceleration, moveSpeed);
+  } else if (keys['KeyS']) {
+    currentSpeed = Math.max(currentSpeed - acceleration, -moveSpeed);
+  } else {
+    if (currentSpeed > 0) {
+            currentSpeed = Math.max(currentSpeed - deceleration, 0); // Desacelerar hasta 0
+        } else if (currentSpeed < 0) {
+            currentSpeed = Math.min(currentSpeed + deceleration, 0); // Desacelerar hasta 0
+        }
+  }
+
+  
+
+  // Aplicar la velocidad calculada
+  GrupoBody.velocity.set(forward.x * currentSpeed, GrupoBody.velocity.y, forward.z * currentSpeed);
+
+
+  // Rotación
+  if (keys['KeyA']) {
+    GrupoBody.angularVelocity.y = rotationSpeed; // Rotar a la izquierda
+  } else if (keys['KeyD']) {
+    GrupoBody.angularVelocity.y = -rotationSpeed; // Rotar a la derecha
+  } else {
+    GrupoBody.angularVelocity.y = 0; // Detener la rotación
+  }
+  GrupoBody.angularVelocity.set(0, GrupoBody.angularVelocity.y, 0);// anular rotaciones no deseadas
+  GrupoBody.quaternion.x=0;
+  GrupoBody.quaternion.z=0;
+  Xwing.quaternion.x=GrupoBody.quaternion.x;
+  Xwing.quaternion.z=GrupoBody.quaternion.z;
+
+    
+///gravedad dinamica 
+if (GrupoBody.position.y>=5.1){
+  GavedadDinamica=-2;
+  world.gravity.set(0, GavedadDinamica, 0);
+}else if (GrupoBody.position.y<=5.1){
+  GavedadDinamica=+2;
+  world.gravity.set(0, GavedadDinamica, 0);
+}else if (GrupoBody.position.y=5){GavedadDinamica=0;}
+if (GrupoBody.position.y>=6){
+    GrupoBody.velocity.y=0;
+}}
+
+////////////////////////////////////////////////////////////////////////////////////////
+//Sistema puntos
+const elemento_puntos = document.getElementById('puntos');
+    const elemento_salud = document.getElementById('salud');
+    const REINICIAR = document.getElementById('botonReiniciar');
+
+    var puntos = 0;
+    var vida = 100;
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//Meteoritos
+var MeteoroSpeed = 5;
+//var TipoMeteoro = Esc5;
+var MeteoroIsAlive = false;
+
+
+let puedeRecibirDanio = true
+function MovimientoMeteoro5(){
+    let NumeroAleatorio =  Math.floor(Math.random()*(150-(-150)) + (-150) );
+    
+
+scene.add(Esc5);
+
+
+if(Esc5.position.x < -300){
+  Esc5.position.y = 5;
+            Esc5.position.x = 280;
+	    	Esc5.position.z = NumeroAleatorio;
+	    	
+	    }
+
+        MeteoroBody.addEventListener('collide', (e) => {
+    if (e.body === GrupoBody && puedeRecibirDanio) {
+        console.log("🚨 Impacto con la nave");
+        var audio3 = new Audio('./song/XwingHits.mp3');
+        audio3.play();
+        vida -= 5;
+        puedeRecibirDanio = false;
+
+        // Reposiciona el meteoro
+        const NumeroAleatorio = Math.floor(Math.random() * (150 - (-150)) + (-150));
+        Esc5.position.set(280, 5, NumeroAleatorio);
+
+        // Rehabilita daño tras 1 segundo (ajustable)
+        setTimeout(() => {
+            puedeRecibirDanio = true;
+        }, 1000); // 1000 ms = 1 segundo
+    }
+})
+}
+
+
+function MovimientoMeteoro7(){
+    let NumeroAleatorio =  Math.floor(Math.random()*(150-(-150)) + (-150) );
+    
+
+scene.add(Esc7);
+
+
+if(Esc7.position.x > 300){
+    Esc7.position.y = 5;
+    Esc7.position.x = -280;
+    Esc7.position.z = NumeroAleatorio;
+	    	
+	    }
+
+        MeteoroBody2.addEventListener('collide', (e) => {
+    if (e.body === GrupoBody && puedeRecibirDanio) {
+        console.log("🚨 Impacto con la nave");
+        var audio3 = new Audio('./song/XwingHits.mp3');
+        audio3.play();
+        vida -= 1;
+        puedeRecibirDanio = false;
+
+        // Reposiciona el meteoro
+        const NumeroAleatorio = Math.floor(Math.random() * (150 - (-150)) + (-150));
+        Esc7.position.set(280, 5, NumeroAleatorio);
+
+        // Rehabilita daño tras 1 segundo (ajustable)
+        setTimeout(() => {
+            puedeRecibirDanio = true;
+        }, 1000); // 1000 ms = 1 segundo
+    }
+})
+}
+
+
+
+const gameover = document.getElementById('aviso');
+function GameOver() {
+    if (vida <= 0) {
+        vida = 0;
+       EINICIAR.style.opacity = 1;
+        REINICIAR.disabled=false;
+        gameover.textContent = 'GAME OVER';
+
+        fondoAudio.pause();        // ⏹️ Detiene la música
+        fondoAudio.currentTime = 0; // 🔁 Opcional: vuelve al inicio
+
+        const GameOverAudio = new Audio('./song/GameOver.mp3');
+        GameOverAudio.loop = true;
+        GameOverAudio.volume = 0.5;
+        GameOverAudio.play();
+
+        animate() = stop;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////
+//Pruebas de disparo//
+let DisparoBody; // ← declaración global y válida
+var missileSpeed = 1000;
+var missileIsAlive = false;
+var shotMissile = 0;
+var gapWithMesh=1.3;
+var shotMissile = 5
+//missile.velocity.set(forward.x * missileSpeed, missile.velocity.y, forward.z * missileSpeed);
+
+
+let missileDirection = new THREE.Vector3(); // global para reutilizar
+
+function createMissile() {
+    const localFront = new THREE.Vector3(0, 0, 1); // Ajusta si nave apunta en otro eje
+    missileDirection.copy(localFront).applyQuaternion(Xwing.quaternion).normalize();
+
+    const startPosition = Xwing.position.clone().add(missileDirection.clone().multiplyScalar(20));
+    missile.position.copy(startPosition);
+    missile.quaternion.copy(Xwing.quaternion);
+    scene.add(missile);
+
+    // Configurar cuerpo físico del misil
+    DisparoBody = new CANNON.Body({
+        mass: 1,
+        shape: new CANNON.Box(new CANNON.Vec3(1.5, 1.5, 4)), // forma similar a la malla
+        material: groundMaterial
+    });
+
+    DisparoBody.position.copy(startPosition);
+    DisparoBody.velocity.set(
+        missileDirection.x * missileSpeed,
+        missileDirection.y * missileSpeed,
+        missileDirection.z * missileSpeed
+    );
+
+    // FILTROS DE COLISIÓN
+    DisparoBody.collisionFilterGroup = GRUPO_DISPARO;
+    DisparoBody.collisionFilterMask = GRUPO_GENERAL; // ← esto evita colisión con paredes
+
+    world.addBody(DisparoBody);
+
+    listenerAsignado = false;
+
+    missileIsAlive = true;
+    const audio = new Audio('./song/blast.wav');
+    audio.play();
+}
+
+
+function playerMissile() {
+    if (Key.isDown(Key.U) && !missileIsAlive) {
+        createMissile();
+        missileIsAlive = true;
+        var audio = new Audio('./song/blast.wav');
+        audio.volume = 0.01;
+        audio.play();
+    }
+
+    if (missileIsAlive) {
+        // Si el misil se aleja demasiado, se elimina
+        if (missile.position.distanceTo(Xwing.position) > 350) {
+            scene.remove(missile);
+            world.removeBody(DisparoBody);
+            missileIsAlive = false;
+        } else {
+            // Sincroniza posición visual con física
+            missile.position.copy(DisparoBody.position);
+        }
+    }
+}
+
+
+/////////////////////////////////////////////////////////
+//Detección del disparo, puntos y deteccion con pared
+
+let listenerAsignado = false;
+
+function DetectIfMissileHitMeteoro() {
+    if (!DisparoBody || listenerAsignado) return;
+
+    DisparoBody.addEventListener('collide', (e) => {
+        if (e.body === MeteoroBody) {
+            var audio2 = new Audio('./song/MeteoroHits.mp3');
+        audio2.play();
+            console.log("🎯 Punto por colisión con meteorito");
+            puntos += 1;
+            Esc5.position.set(280, 5, Math.floor(Math.random() * (150 - (-150)) + (-150)));
+            scene.remove(missile);
+            //world.removeBody(DisparoBody); 
+           missileIsAlive = false;
+        }
+    });
+
+    DisparoBody.addEventListener('collide', (e) => {
+        /////////
+        if (e.body === MeteoroBody2) {
+            var audio2 = new Audio('./song/MeteoroHits.mp3');
+        audio2.play();
+            console.log("🎯 Punto por colisión con meteorito");
+            puntos += 5;
+            Esc7.position.set(280, 5, Math.floor(Math.random() * (150 - (-150)) + (-150)));
+            scene.remove(missile);
+            //world.removeBody(DisparoBody);
+            missileIsAlive = false;
+            
+        }
+////////////
+    });
+
+    
+
+    listenerAsignado = true;
+}
+
+
+
+///////////////////////////////////////////////////
+//Detectar si el meteorito choco con pared y remover
+
+
+///////////////////////////////////////////////////////
+//Evento botones
+window.addEventListener('keyup', function(event) { Key.onKeyup(event); }, false);
+window.addEventListener('keydown', function(event) { Key.onKeydown(event); }, false);
+
+var Key = {
+  _pressed: {},
+
+  L: 37,
+  U: 38,
+  R: 39,
+  S: 83,
+  D: 40,
+  M: 77,
+  SPACE: 32,
+  
+  isDown: function(keyCode) {
+    return this._pressed[keyCode];
+  },
+  
+  onKeydown: function(event) {
+    this._pressed[event.keyCode] = true;
+  },
+  
+  onKeyup: function(event) {
+    delete this._pressed[event.keyCode];
+  }
+};
+
+if ( window.addEventListener ) {
+  var kkeys = [], konami = "38,38,40,40,37,39,37,39,66,65";
+  window.addEventListener("keydown", function(e){
+  kkeys.push( e.keyCode );
+  if ( kkeys.toString().indexOf( konami ) >= 0 ) {
+	  if(!konamiCode){
+	      $("#audio").html('<audio autoplay controls loop><source src="song/sax.mp3" type="audio/mpeg"></audio>');
+	  }
+	  konamiCode = true;
+      
+  }
+}, true);
+}
+
+
+function Final(){if (puntos >= 50){
+    
+    window.location.href = "Dialogos 2.html"
+}}
+
+
+
+
+      //🎰🎰Rendering y animación
+      requestAnimationFrame(render);
+      function render() {
+
+        //Movimiento constante
+        Esc2.rotation.z +=0.001;
+
+        Esc5.position.x -= MeteoroSpeed*1;
+        Esc5.position.z += (Math.cos(clock.getElapsedTime()*vf)*.5)+0.5;
+
+        Esc7.position.x += MeteoroSpeed*1.4;
+        Esc7.position.z += (Math.cos(clock.getElapsedTime()*vf)*.5)+1;
+
+        animate();
+       
+        MovimientoMeteoro5()
+        MovimientoMeteoro7()
+        DetectIfMissileHitMeteoro()
+        playerMissile()
+        Final()
+        MusicaFondo()
+        lf()
+        GameOver();
+         //world.fixedStep();
+         aplicaFisicaAGrafico();
+  //cannonDebug.update(); ///////////se actualiza la visualización del debugger
+
+
+
+
+  // Actualizar el mundo físico
+world.step(1 / 60); 
+        //world.gravity.update;
+        //camera.lookAt(Esc7.position);
+        renderer.render(scene, camera);
+        elemento_puntos.textContent = puntos;
+        elemento_salud.textContent = vida;
+        
+      //🪄🪄 Animación
+    //  controls.update();
+      //Llamado para renderizar y volver a llamar a la misma función (render)
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+      }
+</script>
+</body>
+</html>

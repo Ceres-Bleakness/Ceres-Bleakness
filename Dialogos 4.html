@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Ceres: Bleakness - Aburrimiento</title>
+  <link rel="icon" type="image/png" href="./images/favicon.png"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      color: white;
+    }
+
+    body {
+      background-image: url('./images/Asteroides 2.jpg'); /* Reemplaza con tu imagen */
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: black;
+      opacity: 1;
+      transition: opacity 1s;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #dialogo, #indicacion {
+      position: relative;
+      z-index: 2;
+    }
+
+    #dialogo {
+      font-size: 24px;
+      max-width: 80%;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 10px;
+      margin: auto;
+      margin-top: 30vh;
+    }
+
+    #indicacion {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      opacity: 0.7;
+      display: block;
+    }
+
+    .Omitir { 
+        background-color: black;
+       
+        
+        width:200px;
+        height:100px ;
+        color:whitesmoke;
+        font-size: 30px;
+     }
+
+     #BotonOmitir{
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      margin-top: 400px ;
+      margin-left: 650px ;
+      opacity: 1;
+      transition: opacity 1s;
+      z-index: 1;
+
+     }
+
+  </style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div id="dialogo"></div>
+<div id="indicacion">Presiona Enter para continuar...</div>
+<div id="BotonOmitir"><button class="Omitir" onclick="location.href='Nivel4.html'">Omitir</button></div>
+ 
+
+<audio id="audioFondo" src="./song/MusicaAmbientesD1.mp3" loop></audio>
+
+<script>
+  const dialogos = [
+    { texto: "...", audio: "./song/.m4a"},
+    { texto: "...", audio: "./song/Quejido1.m4a"},
+    { texto: "¿¡Eso es todo lo que tienes, bastardo cósmico!?", audio: "./song/P4-1.wav"},
+    
+    { texto: "Oh,  vaya…", audio: "./song/C4-1.wav" ,color: "#ff0000"},
+    { texto: "Creí que sería extaciante llevarte hasta este punto", audio: "./song/C4-2.wav" ,color: "#ff0000"},
+    { texto: "El reto y furia en tu mirada, el dolor de haber llegado hasta aquí", audio: "./song/C4-3.wav" ,color: "#ff0000"},
+    { texto: "Pero después de todo este esfuerzo…", audio: "./song/C4-4.wav" ,color: "#ff0000"},
+    { texto: "Estoy empezando a aburrirme", audio: "./song/C4-5.wav" ,color: "#ff0000"},
+    
+    { texto: "Eres un maldito", audio: "./song/P4-2.wav"}, 
+    { texto: "Todo lo que me has hecho pasar…", audio: "./song/P4-3.wav"}, 
+    { texto: "Todo para entretenerte…", audio: "./song/P4-3.wav"}, 
+    { texto: "¡¿Y estas aburrido?!", audio: "./song/P4-4.wav"}, 
+    
+    { texto: "¿Qué te puedo decir?",audio: "./song/C4-6.wav" ,color: "#ff0000"},
+    { texto: "Yo también estoy decepcionado", audio: "./song/C4-7.wav" ,color: "#ff0000"},
+    { texto: "Creí…",audio: "./song/C4-8.wav" ,color: "#ff0000"},
+    { texto: "Que sería más divertido",audio: "./song/C4-9.wav" ,color: "#ff0000"},
+
+    { texto: "Muy bien maldito ser cósmico de pacotilla. ¡Terminemos con esto de una vez!", audio: "./song/P4-5.wav"}, 
+    
+    { texto: "…", audio: "./song/D8.m4a", color: "#ff0000" },
+    { texto: "Sí", audio: "./song/C4-10.wav.m4a", color: "#ff0000" },
+    { texto: "Supongo que será lo mejor", audio: "./song/C4-11.wav", color: "#ff0000"},
+    { texto: "Llego tu final pequeño", audio: "./song/C4-12.wav", color: "#ff0000",quitarOscuridad: true},
+    { texto: "...", audio: "./song/D10.m4a", color: "#ff0000"},
+    { texto: "Adiós", audio: "./song/C4-13.wav", color: "#ff0000"},
+    
+  ];
+
+  let indiceDialogo = 0;
+  let escribiendo = false;
+  let fondoIniciado = false;
+  let audioDialogoActual = null; // <<-- Aquí se guarda el audio activo
+
+  const contenedorTexto = document.getElementById("dialogo");
+  const indicacion = document.getElementById("indicacion");
+  const overlay = document.getElementById("overlay");
+  const fondoAudio = document.getElementById("audioFondo");
+
+  async function reproducirDialogoActual() {
+    if (escribiendo || indiceDialogo >= dialogos.length) return;
+
+    // Detiene el audio anterior si existe
+    if (audioDialogoActual) {
+      audioDialogoActual.pause();
+      audioDialogoActual.currentTime = 0;
+    }
+
+    escribiendo = true;
+    contenedorTexto.innerHTML = "";
+    indicacion.style.display = "none";
+
+    const { texto, audio, quitarOscuridad, color } = dialogos[indiceDialogo];
+    contenedorTexto.style.color = color || "white";
+
+    if (quitarOscuridad) {
+      overlay.style.opacity = "0";
+    }
+
+    // Reproduce el nuevo audio
+    audioDialogoActual = new Audio(audio);
+    audioDialogoActual.play().catch(e => console.warn("Audio bloqueado por el navegador:", e));
+
+    for (let i = 0; i <= texto.length; i++) {
+      contenedorTexto.innerHTML = texto.slice(0, i);
+      await new Promise(resolve => setTimeout(resolve, 40));
+    }
+
+    escribiendo = false;
+    indicacion.style.display = "block";
+  }
+
+  document.addEventListener("keydown", async (event) => {
+    if (event.key === "Enter" && !escribiendo) {
+      if (!fondoIniciado) {
+        fondoAudio.play().catch(e => console.warn("Fondo bloqueado por el navegador:", e));
+        fondoIniciado = true;
+        fondoAudio.volume = 0.2;
+      }
+
+      indiceDialogo++;
+      if (indiceDialogo < dialogos.length) {
+        await reproducirDialogoActual();
+      } else {
+        // Detener también cualquier audio en reproducción antes de salir
+        if (audioDialogoActual) {
+          audioDialogoActual.pause();
+          audioDialogoActual.currentTime = 0;
+        }
+        window.location.href = "Nivel4.html";
+      }
+    }
+  });
+
+  document.body.addEventListener("click", () => {
+    if (indiceDialogo === 0) {
+      fondoAudio.play().catch(() => {});
+      fondoIniciado = true;
+      reproducirDialogoActual();
+    }
+  }, { once: true });
+</script>
+
+
+</body>
+</html>
