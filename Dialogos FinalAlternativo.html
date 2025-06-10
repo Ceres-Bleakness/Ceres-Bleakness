@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Ceres: Bleakness - Final Alternativo</title>
+  <title>Ceres: Bleakness - Ciclo</title>
   <link rel="icon" type="image/png" href="./images/favicon.png"/>
   <style>
     html, body {
@@ -15,7 +15,7 @@
     }
 
     body {
-      background-image: url('./images/xwing.jpg'); /* Reemplaza con tu imagen */
+        background-image: url('./images/xwing.jpg'); /* Reemplaza con tu imagen */
       background-size: cover;
       background-position: center;
       position: relative;
@@ -91,6 +91,7 @@
  
 
 <audio id="audioFondo" src="./song/MusicaAmbientesD1.mp3" loop></audio>
+<audio id="audioAlternativo" src="./song/Cancion-FA.mp3" loop></audio>
 
 <script>
   const dialogos = [
@@ -110,7 +111,7 @@
     { texto: "Que vivas lo que te quede…",audio: "./song/CA-9.wav" ,color: "#ff0000"},
 
     { texto: "...", audio: "./song/P2-3.m4a"}, 
-    { texto: "...", audio: "./song/P2-3.m4a"}, 
+    { texto: "...", audio: "./song/Encendido.mp3"}, 
   
     { texto: "Bienvenido de nuevo, piloto.", audio: "./song/BFRA-1.wav" ,color: "#0cb1f3",quitarOscuridad: true},
 
@@ -128,7 +129,8 @@
     { texto: "Bien hecho Nathn", audio: "./song/BFRA-6.wav" ,color: "#0cb1f3"},
 
     { texto: "Good ending", audio: "./song/BFRA-6.wav" ,color: "#0cb1f3"},
-    ];
+
+  ];
 
   let indiceDialogo = 0;
   let escribiendo = false;
@@ -160,6 +162,15 @@
       overlay.style.opacity = "0";
     }
 
+    if (indiceDialogo === 14) { // Cambia el número según el índice deseado
+  fondoAudio.pause();
+  fondoAudio.currentTime = 0;
+
+  const audioAlternativo = document.getElementById("audioAlternativo");
+  audioAlternativo.play().catch(e => console.warn("Audio alternativo bloqueado:", e));
+  audioAlternativo.volume = 0.2;
+}
+
     // Reproduce el nuevo audio
     audioDialogoActual = new Audio(audio);
     audioDialogoActual.play().catch(e => console.warn("Audio bloqueado por el navegador:", e));
@@ -178,7 +189,7 @@
       if (!fondoIniciado) {
         fondoAudio.play().catch(e => console.warn("Fondo bloqueado por el navegador:", e));
         fondoIniciado = true;
-        fondoAudio.volume = 0.2;
+        fondoAudio.volume = 0.01;
       }
 
       indiceDialogo++;
