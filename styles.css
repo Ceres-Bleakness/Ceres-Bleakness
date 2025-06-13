@@ -38,3 +38,9 @@ overflow: hidden;
     background-color: #ffffff;
     transform: scale(1.05);
 }
+.menu-image {
+    display: block;
+    margin: 30px auto 0 auto;
+    max-width: 60%;
+    height: auto;
+  }
